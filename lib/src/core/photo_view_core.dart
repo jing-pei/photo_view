@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:photo_view/photo_view.dart'
     show
@@ -342,32 +343,48 @@ class PhotoViewCoreState extends State<PhotoViewCore>
               ),
               child: _buildHero(),
             );
-            return PhotoViewGestureDetector(
-              child: Container(
-                constraints: widget.tightMode
-                    ? BoxConstraints.tight(scaleBoundaries.childSize! * scale!)
-                    : null,
-                child: Center(
-                  child: Transform(
-                    child: customChildLayout,
-                    transform: matrix,
-                    alignment: basePosition,
+            return Listener(
+                onPointerSignal: _handlePointerSignal,
+                child: PhotoViewGestureDetector(
+                  child: Container(
+                    constraints: widget.tightMode
+                        ? BoxConstraints.tight(
+                            scaleBoundaries.childSize! * scale!)
+                        : null,
+                    child: Center(
+                      child: Transform(
+                        child: customChildLayout,
+                        transform: matrix,
+                        alignment: basePosition,
+                      ),
+                    ),
+                    decoration:
+                        widget.backgroundDecoration ?? _defaultDecoration,
                   ),
-                ),
-                decoration: widget.backgroundDecoration ?? _defaultDecoration,
-              ),
-              onDoubleTap: nextScaleState,
-              onScaleStart: onScaleStart,
-              onScaleUpdate: onScaleUpdate,
-              onScaleEnd: onScaleEnd,
-              hitDetector: this,
-              onTapUp: widget.onTapUp == null ? null : onTapUp,
-              onTapDown: onTapDown,
-            );
+                  onDoubleTap: nextScaleState,
+                  onScaleStart: onScaleStart,
+                  onScaleUpdate: onScaleUpdate,
+                  onScaleEnd: onScaleEnd,
+                  hitDetector: this,
+                  onTapUp: widget.onTapUp == null ? null : onTapUp,
+                  onTapDown: onTapDown,
+                ));
           } else {
             return Container();
           }
         });
+  }
+
+  void _handlePointerSignal(PointerSignalEvent event) {
+    if (event is PointerScrollEvent && event.kind == PointerDeviceKind.mouse) {
+      onScaleStart(ScaleStartDetails(focalPoint: event.position));
+      final double dy = event.scrollDelta.dy;
+      onScaleUpdate(ScaleUpdateDetails(
+          focalPoint: event.position,
+          scale: dy < 0 ? 1 + 0.2 : 1 - 0.2,
+          focalPointDelta: Offset.zero));
+      onScaleEnd(ScaleEndDetails());
+    }
   }
 
   Widget? _buildHero() {
