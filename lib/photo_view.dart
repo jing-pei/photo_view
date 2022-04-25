@@ -1,6 +1,7 @@
 library photo_view;
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:photo_view/src/controller/photo_view_controller.dart';
@@ -725,8 +726,10 @@ class _PhotoViewState extends State<PhotoView> {
     final isVerticalLongPhoto = _childSize!.height / _childSize!.width > 2.5;
     if (isVerticalLongPhoto) {
       initialScale = PhotoViewComputedScale.covered;
-      maxScale = widget.maxScale ?? PhotoViewComputedScale.covered;
-      minScale = PhotoViewComputedScale.covered;
+      if (Platform.isAndroid || Platform.isIOS) {
+        maxScale = widget.maxScale ?? PhotoViewComputedScale.covered;
+        minScale = PhotoViewComputedScale.covered;
+      }
     }
 
     final scaleBoundaries = ScaleBoundaries(
