@@ -377,11 +377,30 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
   void _handlePointerSignal(PointerSignalEvent event) {
     if (event is PointerScrollEvent && event.kind == PointerDeviceKind.mouse) {
+      final double? _scale = scale;
+      final double? maxScale = scaleBoundaries.maxScale;
+      final double? minScale = scaleBoundaries.minScale;
+      final bool zoom = event.scrollDelta.dy < 0;
+      double nextScale = zoom ? 1.2 : 0.8;
+      if (zoom) {
+        if (_scale == maxScale!) {
+          return;
+        }
+        if (_scale! * nextScale > maxScale) {
+          nextScale = maxScale / _scale;
+        }
+      } else {
+        if (_scale == minScale!) {
+          return;
+        }
+        if (_scale! * nextScale < minScale) {
+          nextScale = minScale / _scale;
+        }
+      }
       onScaleStart(ScaleStartDetails(focalPoint: event.position));
-      final double dy = event.scrollDelta.dy;
       onScaleUpdate(ScaleUpdateDetails(
           focalPoint: event.position,
-          scale: dy < 0 ? 1 + 0.2 : 1 - 0.2,
+          scale: nextScale,
           focalPointDelta: Offset.zero));
       onScaleEnd(ScaleEndDetails());
     }
